@@ -101,7 +101,8 @@ Remember that security requirements may vary across applications, and it's cruci
    
 ## Usage
 
-1. Run the main program file
+1. Make sure that the current working directory inside your terminal is `cryptographic-hashing-algorithms`.
+2. Run the main program file
 ```zsh
    python3 main.py
 ```
