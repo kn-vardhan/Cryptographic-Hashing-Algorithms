@@ -8,11 +8,12 @@ A Python-based project with implementations of majorly used cryptographic hashin
 - [Implementation Details](#implementation-details)
 - [Features](#features)
 - [Project Structure](#project-structure)
+- [Disclaimer](#disclaimer)
 - [Getting Started](#getting-started)
   - [Prerequisites](#prerequisites)
   - [Installation](#installation)
 - [Usage](#usage)
-- [Disclaimer](#disclaimer)
+
 
 ## Introduction
 
@@ -39,7 +40,7 @@ Feel free to explore the code, understand its workings, and adapt it to your nee
 - **Secure Password Storage:** Passwords are securely hashed before storage in the SQLite database, enhancing user account security.
 
 - **Database Management:** Utilizes DB Browser for SQLite to facilitate easy database management.
-- **Disclaimer:** Please check out the [disclaimer](https://github.com/kn-vardhan/Cryptographic-Hashing-Algorithms/blob/main/README.md#disclaimer) before usage.
+- **Disclaimer:** Please check out the disclaimer before usage.
 
 ## Project Structure
 
@@ -65,6 +66,18 @@ The project is organized into several directories, each serving a specific purpo
 
 Each directory may also include `__init__.py` files to indicate that the directory should be treated as a Python package.
 
+## Disclaimer
+
+**Attention Users:** Please be aware that, for security reasons, the hashing algorithms provided in this project (except SHA-256 and SHA-512) undergo fewer iterations than commonly found in online hash generators. This deliberate reduction in iterations is designed to strike a balance between security and computational efficiency for the scope of this project.
+
+**Implications:**
+- While SHA-256 and SHA-512 provide highly secure hash functions, others might produce different results compared to online generators.
+- Reduced iterations are intentional and catered to the specific needs of this user authentication system.
+
+**Usage Consideration:**
+- If you are adopting this project for your use case, ensure you understand and accept the implications of the chosen hashing algorithms.
+
+Remember that security requirements may vary across applications, and it's crucial to align your choices with your specific needs.
 
 
 ## Getting Started
@@ -94,15 +107,4 @@ Each directory may also include `__init__.py` files to indicate that the directo
 ```
 2. Follow the prompts to choose a hashing algorithm and interact with the user login portal
 
-## Disclaimer
 
-**Attention Users:** Please be aware that, for security reasons, the hashing algorithms provided in this project (except SHA-256 and SHA-512) undergo fewer iterations than commonly found in online hash generators. This deliberate reduction in iterations is designed to strike a balance between security and computational efficiency for the scope of this project.
-
-**Implications:**
-- While SHA-256 and SHA-512 provide highly secure hash functions, others might produce different results compared to online generators.
-- Reduced iterations are intentional and catered to the specific needs of this user authentication system.
-
-**Usage Consideration:**
-- If you are adopting this project for your use case, ensure you understand and accept the implications of the chosen hashing algorithms.
-
-Remember that security requirements may vary across applications, and it's crucial to align your choices with your specific needs.
