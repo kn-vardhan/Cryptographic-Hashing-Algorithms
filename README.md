@@ -39,7 +39,7 @@ Feel free to explore the code, understand its workings, and adapt it to your nee
 - **Secure Password Storage:** Passwords are securely hashed before storage in the SQLite database, enhancing user account security.
 
 - **Database Management:** Utilizes DB Browser for SQLite to facilitate easy database management.
-- **Disclaimer:** Please check out the [Disclaimer](#disclaimer) before usage.
+- **Disclaimer:** Please check out the [disclaimer](https://github.com/kn-vardhan/Cryptographic-Hashing-Algorithms/blob/main/README.md#disclaimer) before usage.
 
 ## Project Structure
 
