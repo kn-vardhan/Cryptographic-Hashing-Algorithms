@@ -106,6 +106,6 @@ Remember that security requirements may vary across applications, and it's cruci
 ```zsh
    python3 main.py
 ```
-2. Follow the prompts to choose a hashing algorithm and interact with the user login portal
+3. Follow the prompts to choose a hashing algorithm and interact with the user login portal
 
 

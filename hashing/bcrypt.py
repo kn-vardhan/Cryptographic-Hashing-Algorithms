@@ -1,3 +1,21 @@
+"""
+This module contains the implementation of bcrypt hashing algorithm
+
+bcrypt(password, salt, cost) -> List[str]: returns [ctext, salt]
+
+Functions:
+    _eks_blowfish_setup(password: str, salt: str, cost: int) -> List[any]
+    _expand_key(p: List[int], s: List[List[int]], salt: str, password: str) -> List[any]
+    _padding(input_string: str) -> List[str]
+    _crypt_output(hash_val: str, salt: str, cost: int) -> str
+    is_bit_string(input_string: str) -> bool
+    _text_to_binary(input_string: str) -> str
+    _binary_to_base64(bit_string: str) -> str
+    _base64_to_binary(base64_string: str) -> str
+    bcrypt(password: str, salt: str, cost: int) -> List[str]
+
+"""
+
 # import necessary libraries
 import base64
 from copy import deepcopy
@@ -8,8 +26,10 @@ from .blowfish import blowfish
 # import necessary constants from constants package
 from constants.Constants import P_array, S_box, BCRYPT_CTEXT
 
+# expose only the required functions
+__all__ = ['bcrypt']
 
-def eks_blowfish_setup(password: str, salt: str, cost: int) -> List[any]:
+def _eks_blowfish_setup(password: str, salt: str, cost: int) -> List[any]:
     """
     Generating P-array and S-boxes from password and salt
 
@@ -28,17 +48,17 @@ def eks_blowfish_setup(password: str, salt: str, cost: int) -> List[any]:
     s = deepcopy(S_box)
 
     # Permuting P-array and S-boxes using password and salt
-    temp_p, temp_s = expand_key(p.copy(), s.copy(), salt, password)
+    temp_p, temp_s = _expand_key(p.copy(), s.copy(), salt, password)
 
     # Permuting with the Expensive Part of the Algorithm
     for i in range(pow(2, cost)):
-        temp_p, temp_s = expand_key(temp_p, temp_s, '0', password)
-        temp_p, temp_s = expand_key(temp_p, temp_s, '0', salt)
+        temp_p, temp_s = _expand_key(temp_p, temp_s, '0', password)
+        temp_p, temp_s = _expand_key(temp_p, temp_s, '0', salt)
 
     return [temp_p, temp_s]
 
 
-def expand_key(p: List[int], s: List[List[int]], salt: str, password: str) -> List[any]:
+def _expand_key(p: List[int], s: List[List[int]], salt: str, password: str) -> List[any]:
     """
     Permuting P-array and S-boxes using password and salt
 
@@ -58,11 +78,11 @@ def expand_key(p: List[int], s: List[List[int]], salt: str, password: str) -> Li
         salt = '0' * 128
 
     # Check if password is a binary string
-    if not is_bit_string(password):
-        password = text_to_binary(password)
+    if not _is_bit_string(password):
+        password = _text_to_binary(password)
 
     # Padding password to make it a multiple of 32 bits
-    password = padding(password)
+    password = _padding(password)
 
     # XORing P1 to P18 with the password
     for i in range(18):
@@ -100,9 +120,9 @@ def expand_key(p: List[int], s: List[List[int]], salt: str, password: str) -> Li
     return [p, s]
 
 
-def padding(input_string: str) -> List[str]:
+def _padding(input_string: str) -> List[str]:
     """
-    Pre-processing input by padding and chunking
+    Pre-_processing_sha512 input by _padding and _chunking
 
     Args:
         input_string (str): input string to be padded
@@ -122,7 +142,7 @@ def padding(input_string: str) -> List[str]:
     return chunks
 
 
-def crypt_output(hash_val: str, salt: str, cost: int) -> str:
+def _crypt_output(hash_val: str, salt: str, cost: int) -> str:
     """
     Convert the final hash into bcrypt 's crypt output format
 
@@ -136,15 +156,15 @@ def crypt_output(hash_val: str, salt: str, cost: int) -> str:
     """
 
     # Converting hash to base64 string
-    hash_val = binary_to_base64(hash_val)
+    hash_val = _binary_to_base64(hash_val)
 
     # Converting salt to base64 string
-    salt = binary_to_base64(salt)
+    salt = _binary_to_base64(salt)
 
     return '$2a$' + str(cost) + '$' + salt + hash_val
 
 
-def is_bit_string(input_string: str) -> bool:
+def _is_bit_string(input_string: str) -> bool:
     """
     Check if input string is a binary string
 
@@ -162,7 +182,7 @@ def is_bit_string(input_string: str) -> bool:
     return True
 
 
-def text_to_binary(input_string: str) -> str:
+def _text_to_binary(input_string: str) -> str:
     """
     Convert input string to binary string
 
@@ -176,7 +196,7 @@ def text_to_binary(input_string: str) -> str:
     return ''.join(format(ord(char), '08b') for char in input_string)
 
 
-def binary_to_base64(bit_string: str) -> str:
+def _binary_to_base64(bit_string: str) -> str:
     """
     Convert binary string to base64 string
 
@@ -187,13 +207,13 @@ def binary_to_base64(bit_string: str) -> str:
         str: base64 string
     """
 
-    byte_data = int(bit_string, 2).to_bytes((len(bit_string) + 7) // 8, byteorder='big')
-    base64_string = base64.b64encode(byte_data).decode('utf-8')
+    byte_data = int(bit_string, 2).to_bytes((len(bit_string) + 7) // 8)
+    base64_string = base64.b64encode(byte_data).decode()
 
     return base64_string
 
 
-def base64_to_binary(base64_string: str) -> str:
+def _base64_to_binary(base64_string: str) -> str:
     """
     Convert base64 string to binary string
 
@@ -213,6 +233,13 @@ def base64_to_binary(base64_string: str) -> str:
 # Driver code
 def bcrypt(password: str, salt: str, cost: int) -> List[str]:
     """
+    Generate bcrypt hash of the given password
+
+    Args:
+        password (str): password to be hashed; plain-text
+        salt (str): salt used for encryption, 128-bit binary string
+        cost (int): cost number of iterations; 2^cost
+
     Returns:
         list(str): [ctext, salt]
     """
@@ -223,10 +250,10 @@ def bcrypt(password: str, salt: str, cost: int) -> List[str]:
         salt = '{0:0128b}'.format(salt)
     else:
         # Convert base64 salt to binary string
-        salt = base64_to_binary(salt)
+        salt = _base64_to_binary(salt)
 
     # Initializing P-array and S-boxes using EksBlowfishSetup
-    p, s = eks_blowfish_setup(password, salt, cost)
+    p, s = _eks_blowfish_setup(password, salt, cost)
 
     # Initializing ciphertext
     ctext = BCRYPT_CTEXT
@@ -237,4 +264,4 @@ def bcrypt(password: str, salt: str, cost: int) -> List[str]:
     del p
     del s
 
-    return [crypt_output(ctext, salt, cost), binary_to_base64(salt)]
+    return [_crypt_output(ctext, salt, cost), _binary_to_base64(salt)]

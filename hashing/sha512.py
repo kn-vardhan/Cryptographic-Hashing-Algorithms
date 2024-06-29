@@ -1,13 +1,32 @@
+"""
+This module contains the implementation of SHA-512 hashing algorithm
+
+sha512(password: str) -> str: returns hash value of the password in hex format
+
+Functions:
+    _padding(bit_string: str) -> str
+    _processing_sha512(padded_message: str) -> str
+    _compression512(a: int, b: int, c: int, d: int, e: int, f: int, g: int, h: int, W: List[int]) -> List[int]
+    b_sig0(x: int) -> int
+    b_sig1(x: int) -> int
+    s_sig0(x: int) -> int
+    s_sig1(x: int) -> int
+    sha512(password: str) -> str
+
+"""
+
 # import necessary libraries
-from typing import List
+from .sha_utils import *
 
 # import necessary constants from constants package
 from constants.Constants import K_sha512, init_hash_sha512
 
+# expose only the required functions
+__all__ = ['sha512']
 
-def padding(bit_string: str) -> str:
+def _padding(bit_string: str) -> str:
     """
-    Pre-processing message by padding
+    Pre-_processing_sha512 message by _padding
     M + 1 + K ≡ 896 mod 1024
 
     Args:
@@ -31,26 +50,7 @@ def padding(bit_string: str) -> str:
     return pad_msg
 
 
-def chunking(L: str, n: int) -> List[str]:
-    """
-    Breaking message into n-bit chunks
-
-    Args:
-        L (str): padded message
-        n (int): number of bits in each chunk
-
-    Returns:
-        list(str): list of n-bit chunks
-    """
-
-    chunks = []
-    for i in range(0, len(L), n):
-        chunks.append(L[i: i + n])
-
-    return chunks
-
-
-def processing(padded_message: str) -> str:
+def _processing_sha512(padded_message: str) -> str:
     """
     Process message in successive 1024-bit chunks and produce final hash
 
@@ -82,7 +82,7 @@ def processing(padded_message: str) -> str:
         a, b, c, d, e, f, g, h = hash_vals
 
         # Performing the main compression function
-        variable_hash = compression512(a, b, c, d, e, f, g, h, W)
+        variable_hash = _compression512(a, b, c, d, e, f, g, h, W)
 
         # Adding compressed chunk to initialized current hash value
         for i in range(8):
@@ -91,7 +91,7 @@ def processing(padded_message: str) -> str:
     return ''.join(f'{h:08x}' for h in hash_vals)
 
 
-def compression512(a: int, b: int, c: int, d: int, e: int, f: int, g: int, h: int, W: List[int]) -> List[int]:
+def _compression512(a: int, b: int, c: int, d: int, e: int, f: int, g: int, h: int, W: List[int]) -> List[int]:
     """
     Main Compression Function for SHA-512
 
@@ -127,21 +127,6 @@ def compression512(a: int, b: int, c: int, d: int, e: int, f: int, g: int, h: in
     return [a, b, c, d, e, f, g, h]
 
 
-def rotate_right(n: int, b: int) -> int:
-    """
-    Right rotate a 64-bit integer n by b bits
-
-    Args:
-        n (int): 64-bit integer to be rotated
-        b (int): number of bits to rotate
-
-    Returns:
-        int: rotated 64-bit integer
-    """
-
-    return (n >> b) | (n << (64 - b)) & 0xffffffffffffffff
-
-
 def b_sig0(x: int) -> int:
     """
     SHA-512 but operations
@@ -154,7 +139,7 @@ def b_sig0(x: int) -> int:
         int: SHA-512 bit operation
     """
 
-    return rotate_right(x, 28) ^ rotate_right(x, 34) ^ rotate_right(x, 39)
+    return rotate_right(x, 28, 64) ^ rotate_right(x, 34, 64) ^ rotate_right(x, 39, 64)
 
 
 def b_sig1(x: int) -> int:
@@ -169,7 +154,7 @@ def b_sig1(x: int) -> int:
         int: SHA-512 bit operation
     """
 
-    return rotate_right(x, 14) ^ rotate_right(x, 18) ^ rotate_right(x, 41)
+    return rotate_right(x, 14, 64) ^ rotate_right(x, 18, 64) ^ rotate_right(x, 41, 64)
 
 
 def s_sig0(x: int) -> int:
@@ -184,7 +169,7 @@ def s_sig0(x: int) -> int:
         int: SHA-512 bit operation
     """
 
-    return rotate_right(x, 1) ^ rotate_right(x, 8) ^ x >> 7
+    return rotate_right(x, 1, 64) ^ rotate_right(x, 8, 64) ^ x >> 7
 
 
 def s_sig1(x: int) -> int:
@@ -199,39 +184,7 @@ def s_sig1(x: int) -> int:
         int: SHA-512 bit operation
     """
 
-    return rotate_right(x, 19) ^ rotate_right(x, 61) ^ x >> 6
-
-
-def is_bit_string(input_string: str) -> bool:
-    """
-    Check if input string is a binary string
-
-    Args:
-        input_string (str): input string
-
-    Returns:
-        bool: True if input string is a binary string, False otherwise
-    """
-
-    for char in input_string:
-        if char not in ['0', '1']:
-            return False
-
-    return True
-
-
-def text_to_binary(input_string: str) -> str:
-    """
-    Convert input string to binary string
-
-    Args:
-        input_string (str): input string
-
-    Returns:
-        str: binary string consisting of 0s and 1s
-    """
-
-    return ''.join(format(ord(char), '08b') for char in input_string)
+    return rotate_right(x, 19, 64) ^ rotate_right(x, 61, 64) ^ x >> 6
 
 
 # Driver code
@@ -245,4 +198,4 @@ def sha512(password: str) -> str:
     if not is_bit_string(password):
         password = text_to_binary(password)
 
-    return processing(padding(password))
+    return _processing_sha512(_padding(password))

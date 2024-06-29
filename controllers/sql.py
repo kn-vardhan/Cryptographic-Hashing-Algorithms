@@ -1,3 +1,11 @@
+"""
+This module is responsible for interacting with the database using sqlite3.
+
+Classes:
+    SQL
+
+"""
+
 # import necessary libraries
 import sqlite3
 
@@ -53,9 +61,15 @@ class SQL:
         if self.connection:
             self.connection.close()
 
-    def create_table(self, table_name: str):
+    def create_table(self, table_name: str) -> None:
         """
         Create a table in the database if it does not exist
+
+        Args:
+            table_name (str): table name to create
+
+        Returns:
+            None
         """
 
         query = f"""CREATE TABLE IF NOT EXISTS {table_name} (
@@ -81,12 +95,14 @@ class SQL:
             bool: True if username exists, False otherwise
         """
 
-        query = f"""SELECT * FROM {table_name} WHERE {self.username} = ?"""
+        query = f"SELECT 1 FROM {table_name} WHERE {self.username} = ?"
+
         cursor = self.connection.cursor()
         cursor.execute(query, (username,))
         result = cursor.fetchone()
         cursor.close()
-        return True if result else False
+
+        return result is not None
 
     def get_hash(self, table_name: str, username: str) -> str:
         """
@@ -100,12 +116,13 @@ class SQL:
             str: hash value of the username
         """
 
-        query = f"""SELECT {self.hash} FROM {table_name}
-                WHERE {self.username} = ?"""
+        query = f"SELECT {self.hash} FROM {table_name} WHERE {self.username} = ?"
+
         cursor = self.connection.cursor()
         cursor.execute(query, (username,))
         result = cursor.fetchone()
         cursor.close()
+
         return result[0] if result else None
 
     def get_salt(self, table_name: str, username: str) -> str:
@@ -120,12 +137,13 @@ class SQL:
             str: salt of the username
         """
 
-        query = f"""SELECT {self.salt} FROM {table_name}
-                WHERE {self.username} = ?"""
+        query = f"SELECT {self.salt} FROM {table_name} WHERE {self.username} = ?"
+
         cursor = self.connection.cursor()
         cursor.execute(query, (username,))
         result = cursor.fetchone()
         cursor.close()
+
         return result[0] if result else None
 
     def insert(self, table_name: str, username: str, hash_value: str, salt: str) -> None:
@@ -142,8 +160,8 @@ class SQL:
             None
         """
 
-        query = f"""INSERT INTO {table_name} ({self.username},
-                {self.hash}, {self.salt}) VALUES (?, ?, ?)"""
+        query = f"INSERT INTO {table_name} ({self.username}, {self.hash}, {self.salt}) VALUES (?, ?, ?)"
+
         cursor = self.connection.cursor()
         cursor.execute(query, (username, hash_value, salt))
         self.connection.commit()
@@ -163,8 +181,8 @@ class SQL:
             None
         """
 
-        query = f"""UPDATE {table_name} SET {self.hash} = ?, {self.salt} = ?
-                WHERE {self.username} = ?"""
+        query = f"UPDATE {table_name} SET {self.hash} = ?, {self.salt} = ? WHERE {self.username} = ?"
+
         cursor = self.connection.cursor()
         cursor.execute(query, (hash_value, salt, username))
         self.connection.commit()
@@ -182,7 +200,8 @@ class SQL:
             None
         """
 
-        query = f"""DELETE FROM {table_name} WHERE {self.username} = ?"""
+        query = f"DELETE FROM {table_name} WHERE {self.username} = ?"
+
         cursor = self.connection.cursor()
         cursor.execute(query, (username,))
         self.connection.commit()

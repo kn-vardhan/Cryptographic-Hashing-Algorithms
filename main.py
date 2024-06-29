@@ -1,33 +1,44 @@
+"""
+This is the main file to run the application.
+
+It initializes all the necessary objects and starts the program.
+Based on user interaction, the program proceeds to different controllers.
+
+The program is divided into 4 controllers:
+    - AlgorithmSelector: To select the hashing algorithm
+    - AuthenticateUser: To authenticate the user
+    - SQL: To interact with the database
+    - UserInteractionChoiceSelector: To select the user interaction choice
+
+"""
+
 # import necessary libraries
-from authentication.algo_selector import AlgorithmSelector
+from controllers.algo_selector import AlgorithmSelector
+from controllers.authenticate_user import AuthenticateUser
+from controllers.sql import SQL
+from controllers.user_interaction import UserInteractionChoiceSelector
 
 
 def main():
+    """
+    main function to run the program
+    """
 
-    try:
-        # Prompting user to choose a hashing algorithm
-        print("Please select the hashing algorithm:\n")
-        print("1. SHA-256")
-        print("2. SHA-512")
-        print("3. HMAC-SHA256")
-        print("4. HMAC-SHA512")
-        print("5. PBKDF2-HMAC-SHA256")
-        print("6. PBKDF2-HMAC-SHA512")
-        print("7. BCRYPT\n")
+    # Initializing UserInteraction object
+    interaction = UserInteractionChoiceSelector()
 
-        choice = input("Enter your choice: ")
-        if choice not in ['1', '2', '3', '4', '5', '6', '7']:
-            raise ValueError("Invalid choice!")
+    # Initializing AlgorithmSelector object
+    algorithm_selector = AlgorithmSelector(interaction)
+    hashing_algorithm = algorithm_selector.hashing_algorithm
+    
+    # Initializing SQL object client with hashing algorithm
+    sql_client = SQL(hashing_algorithm)
 
-    except ValueError:
-        print("Invalid choice!\n")
-        print("Exiting...")
-        exit()
+    # Initializing AuthenticateUser object with SQL object client
+    user = AuthenticateUser(interaction, sql_client, choice=hashing_algorithm)
 
-    # Creating AlgorithmSelector object to run the program
-    algorithm_selector = AlgorithmSelector(choice)
-    print("Hashing Algorithm Chosen:", algorithm_selector.hashing_algorithm)
-    print("\n")
+    # Authenticating the user
+    user.authenticate_user()
 
 
 # Driver code

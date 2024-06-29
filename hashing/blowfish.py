@@ -1,3 +1,20 @@
+"""
+This module contains the implementation of Blowfish encryption algorithm
+
+blowfish(message: str, p=None, s=None) -> str: returns encrypted message as binary string
+
+Functions:
+    _initialize_blowfish(key: str) -> List[any]
+    _padding(msg_bit_string: str) -> List[str]
+    _encrypt_ecb(padded_msgs: List[str], p: List[int], s: List[List[int]]) -> str
+    _fiestel_function(L: str, s: List[List[int]]) -> str
+    _post_process(L: str, R: str, p: List[int]) -> str
+    is_bit_string(input_string: str) -> bool
+    _text_to_binary(input_string: str) -> str
+    blowfish(message: str, p=None, s=None) -> str
+
+"""
+
 # import necessary libraries
 from copy import deepcopy
 from typing import List
@@ -5,8 +22,10 @@ from typing import List
 # import necessary constants from constants package
 from constants.Constants import P_array, S_box, BLOWFISH_KEY
 
+# expose only the required functions
+__all__ = ['blowfish']
 
-def initialize_blowfish(key: str) -> List[any]:
+def _initialize_blowfish(key: str) -> List[any]:
     """
     Generate P-array and S-boxes from key
 
@@ -33,7 +52,7 @@ def initialize_blowfish(key: str) -> List[any]:
     for i in range(0, 18, 2):
 
         # Encrypting the zero-string
-        enc_string = encrypt_ecb(padding(zero_string), p, s)
+        enc_string = _encrypt_ecb(_padding(zero_string), p, s)
 
         # Splitting output into L, R
         L = enc_string[:32]
@@ -51,7 +70,7 @@ def initialize_blowfish(key: str) -> List[any]:
         for j in range(0, 256, 2):
 
             # Encrypting the zero-string
-            enc_string = encrypt_ecb(padding(zero_string), p, s)
+            enc_string = _encrypt_ecb(_padding(zero_string), p, s)
 
             # Splitting output into L, R
             L = enc_string[:32]
@@ -67,9 +86,9 @@ def initialize_blowfish(key: str) -> List[any]:
     return [p, s]
 
 
-def padding(msg_bit_string: str) -> List[str]:
+def _padding(msg_bit_string: str) -> List[str]:
     """
-    Pre-processing message by padding and chunking
+    Pre-_processing_sha512 message by _padding and _chunking
     Padding message to make it a multiple of 64 bits
 
     Args:
@@ -90,7 +109,7 @@ def padding(msg_bit_string: str) -> List[str]:
     return chunks
 
 
-def encrypt_ecb(padded_msgs: List[str], p: List[int], s: List[List[int]]) -> str:
+def _encrypt_ecb(padded_msgs: List[str], p: List[int], s: List[List[int]]) -> str:
     """
     Encrypt message using Blowfish algorithm
 
@@ -117,19 +136,19 @@ def encrypt_ecb(padded_msgs: List[str], p: List[int], s: List[List[int]]) -> str
         # 16 rounds of fiestel function
         for i in range(16):
             L = bin(int(L, 2) ^ p[i])[2:].zfill(32)
-            L1 = fiestel_function(L, s)
+            L1 = _fiestel_function(L, s)
             R = bin(int(R, 2) ^ int(L1, 2))[2:].zfill(32)
 
             # Swapping left half and right half 32-bit blocks
             L, R = R, L
 
-        # Post-processing L, R and generating cipher
-        cipher += post_process(L, R, p)
+        # Post-_processing_sha512 L, R and generating cipher
+        cipher += _post_process(L, R, p)
 
     return cipher
 
 
-def fiestel_function(L: str, s: List[List[int]]) -> str:
+def _fiestel_function(L: str, s: List[List[int]]) -> str:
     """
     Dividing 32-bit L into 4 8-bit blocks and performing S-box substitutions
 
@@ -151,7 +170,7 @@ def fiestel_function(L: str, s: List[List[int]]) -> str:
     output = (output + s[1][int(chunks[1], 2)]) % pow(2, 32)
 
     # XOR with third S-box
-    output = output ^ s[2][int(chunks[2], 2)]
+    output ^= s[2][int(chunks[2], 2)]
 
     # Addition with fourth S-box modulo 2^32
     output = (output + s[3][int(chunks[3], 2)]) % pow(2, 32)
@@ -162,7 +181,7 @@ def fiestel_function(L: str, s: List[List[int]]) -> str:
     return output
 
 
-def post_process(L: str, R: str, p: List[int]) -> str:
+def _post_process(L: str, R: str, p: List[int]) -> str:
     """
     Processing final bit strings after fiestel network
 
@@ -188,7 +207,7 @@ def post_process(L: str, R: str, p: List[int]) -> str:
     return cipher
 
 
-def is_bit_string(input_string: str) -> bool:
+def _is_bit_string(input_string: str) -> bool:
     """
     Check if input string is a binary string
 
@@ -206,7 +225,7 @@ def is_bit_string(input_string: str) -> bool:
     return True
 
 
-def text_to_binary(input_string: str) -> str:
+def _text_to_binary(input_string: str) -> str:
     """
     Convert input string to binary string
 
@@ -236,14 +255,14 @@ def blowfish(message: str, p=None, s=None) -> str:
 
     if p is None or s is None:
         # Generating P-array and S-boxes from key
-        p, s = initialize_blowfish(BLOWFISH_KEY)
+        p, s = _initialize_blowfish(BLOWFISH_KEY)
 
     # Check if message is a binary string
-    if not is_bit_string(message):
-        message = text_to_binary(message)
+    if not _is_bit_string(message):
+        message = _text_to_binary(message)
 
     # Encrypting message
-    encrypted_msg = encrypt_ecb(padding(message), p, s)
+    encrypted_msg = _encrypt_ecb(_padding(message), p, s)
 
     # Flushing P-array and S-boxes
     del p

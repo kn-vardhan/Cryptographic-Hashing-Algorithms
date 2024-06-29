@@ -1,4 +1,21 @@
-# All necessary constants for the project
+"""
+This file contains all the constants used in the application.
+
+Constants for hashing module
+Constants for controllers module
+Constants for database module
+"""
+
+# Choices for choosing hashing algorithms
+choices = {
+            '1': "SHA-256",
+            '2': "SHA-512",
+            '3': "HMAC-SHA256",
+            '4': "HMAC-SHA512",
+            '5': "PBKDF2-HMAC-SHA256",
+            '6': "PBKDF2-HMAC-SHA512",
+            '7': "BCRYPT"
+        }
 
 # Constants for hashing algorithms choice
 SHA256 = "sha256"
@@ -10,7 +27,7 @@ PBKDF2_HMAC_SHA512 = "pbkdf2_hmac_sha512"
 BCRYPT = "bcrypt"
 
 # Secret Key for HMAC-SHA-256
-HMAC_SHA2_KEY = 'mykey'
+HMAC_SHA2_KEY = 'MyKey'
 
 # Secret Key for Blowfish
 BLOWFISH_KEY = [0x4B7A70E9, 0xB5B32944, 0xDB75092E, 0xC4192623,

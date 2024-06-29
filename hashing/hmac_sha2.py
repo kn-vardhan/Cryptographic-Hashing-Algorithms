@@ -1,11 +1,29 @@
+"""
+This module contains the implementation of HMAC-SHA2 hashing algorithm
+
+hmac_sha2(key: str, message: str, version: int) -> str: returns hash value of the password in hex format
+
+Functions:
+    _initialize_padding(size: int) -> List[str]
+    _derived_key(key: str, version: int) -> str
+    _inner_hash(key: str, ipad: str, msg: str, version: int) -> str
+    _outer_hash(key: str, opad: str, inner: str, version: int) -> str
+    hmac_sha2(key: str, message: str, version: int) -> str
+
+"""
+
 # import necessary libraries
-from typing import List
-from . import sha256, sha512
+from .sha256 import sha256
+from .sha512 import sha512
+from .sha_utils import *
 
 
-def initialize_padding(size: int) -> List[str]:
+# expose only the required functions
+__all__ = ['hmac_sha2']
+
+def _initialize_padding(size: int) -> List[str]:
     """
-    Creating inner padding and outer padding with byte values 0x36, 0x5c
+    Creating inner _padding and outer _padding with byte values 0x36, 0x5c
 
     Args:
         size (int): block size of the hash function
@@ -27,7 +45,7 @@ def initialize_padding(size: int) -> List[str]:
     return [i_pad_bits, o_pad_bits]
 
 
-def derived_key(key: str, version: int) -> str:
+def _derived_key(key: str, version: int) -> str:
     """
     Block-sized derived key from the secret key
 
@@ -45,9 +63,9 @@ def derived_key(key: str, version: int) -> str:
     # Check if key is longer than block size
     if len(key) > block_size:
         if version == 256:
-            key = sha256.sha256(key)
+            key = sha256(key)
         elif version == 512:
-            key = sha512.sha512(key)
+            key = sha512(key)
 
         # convert key (as hex string) to binary string
         key = bin(int('0x' + key, 16))[2:]
@@ -61,7 +79,7 @@ def derived_key(key: str, version: int) -> str:
     return d_key
 
 
-def inner_hash(key: str, ipad: str, msg: str, version: int) -> str:
+def _inner_hash(key: str, ipad: str, msg: str, version: int) -> str:
     """
     Computing inner hash
     H(K XOR ipad, msg)
@@ -77,7 +95,7 @@ def inner_hash(key: str, ipad: str, msg: str, version: int) -> str:
     """
 
     # Fetching derived key from key
-    d_key = derived_key(key, version)
+    d_key = _derived_key(key, version)
 
     # XOR key with ipad
     ipad = ''.join(str(int(b) ^ int(ipad[i])) for i, b in enumerate(d_key))
@@ -85,17 +103,17 @@ def inner_hash(key: str, ipad: str, msg: str, version: int) -> str:
     # Computing inner hash
     inner_hash_result = ''
     if version == 256:
-        inner_hash_result = sha256.sha256(ipad + msg)
+        inner_hash_result = sha256(ipad + msg)
     elif version == 512:
-        inner_hash_result = sha512.sha512(ipad + msg)
+        inner_hash_result = sha512(ipad + msg)
 
     return inner_hash_result
 
 
-def outer_hash(key: str, opad: str, inner: str, version: int) -> str:
+def _outer_hash(key: str, opad: str, inner: str, version: int) -> str:
     """
     Computing outer hash
-    H(K XOR opad, inner_hash)
+    H(K XOR opad, _inner_hash)
 
     Args:
         key (str): secret key as bit string
@@ -108,7 +126,7 @@ def outer_hash(key: str, opad: str, inner: str, version: int) -> str:
     """
 
     # Fetching derived key from key
-    d_key = derived_key(key, version)
+    d_key = _derived_key(key, version)
 
     # Converting inner hash into bit string from hex string
     inner = bin(int('0x' + inner, 16))[2:]
@@ -119,9 +137,9 @@ def outer_hash(key: str, opad: str, inner: str, version: int) -> str:
     # Computing outer hash
     outer_hash_result = ''
     if version == 256:
-        outer_hash_result = sha256.sha256(opad + inner)
+        outer_hash_result = sha256(opad + inner)
     elif version == 512:
-        outer_hash_result = sha512.sha512(opad + inner)
+        outer_hash_result = sha512(opad + inner)
 
     return outer_hash_result
 
@@ -129,19 +147,26 @@ def outer_hash(key: str, opad: str, inner: str, version: int) -> str:
 # Driver code
 def hmac_sha2(key: str, message: str, version: int) -> str:
     """
+    Generating HMAC-SHA2 hash value of the password
+
+    Args:
+        key (str): secret key as string
+        message (str): message to be hashed
+        version (int): version of the hash function (256 or 512)
+
     Returns:
         str: hash value of the password in hex format
     """
 
     # Initializing inner and outer pad vectors
-    pads = initialize_padding(version)
+    pads = _initialize_padding(version)
 
     # Check if key is a bit string
-    if not sha256.is_bit_string(key):
-        key = sha256.text_to_binary(key)
+    if not is_bit_string(key):
+        key = text_to_binary(key)
 
     # Check if message is a bit string
-    if not sha256.is_bit_string(message):
-        message = sha256.text_to_binary(message)
+    if not is_bit_string(message):
+        message = text_to_binary(message)
 
-    return outer_hash(key, pads[1], inner_hash(key, pads[0], message, version), version)
+    return _outer_hash(key, pads[1], _inner_hash(key, pads[0], message, version), version)

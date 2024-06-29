@@ -1,13 +1,32 @@
+"""
+This module contains the implementation of SHA-256 hashing algorithm
+
+sha256(password: str) -> str: returns hash value of the password in hex format
+
+Functions:
+    _padding(bit_string: str) -> str
+    _processing_sha256(padded_message: str) -> str
+    _compression256(a: int, b: int, c: int, d: int, e: int, f: int, g: int, h: int, W: List[int]) -> List[int]
+    b_sig0(x: int) -> int
+    b_sig1(x: int) -> int
+    s_sig0(x: int) -> int
+    s_sig1(x: int) -> int
+    sha256(password: str) -> str
+
+"""
+
 # import necessary libraries
-from typing import List
+from .sha_utils import *
 
 # import necessary constants from constants package
 from constants.Constants import K_sha256, init_hash_sha256
 
+# expose only the required functions
+__all__ = ['sha256']
 
-def padding(bit_string: str) -> str:
+def _padding(bit_string: str) -> str:
     """
-    Pre-processing message by padding
+    Pre-_processing_sha512 message by _padding
     M + 1 + K ≡ 448 mod 512
 
     Args:
@@ -31,26 +50,7 @@ def padding(bit_string: str) -> str:
     return pad_msg
 
 
-def chunking(L: str, n: int) -> List[str]:
-    """
-    Breaking message into n-bit chunks
-
-    Args:
-        L (str): padded message
-        n (int): number of bits in each chunk
-
-    Returns:
-        list(str): list of n-bit chunks
-    """
-
-    chunks = []
-    for i in range(0, len(L), n):
-        chunks.append(L[i: i + n])
-
-    return chunks
-
-
-def processing(padded_message: str) -> str:
+def _processing_sha256(padded_message: str) -> str:
     """
     Process message in successive 512-bit chunks and produce final hash
 
@@ -82,7 +82,7 @@ def processing(padded_message: str) -> str:
         a, b, c, d, e, f, g, h = hash_vals
 
         # Performing the main compression function
-        variable_hash = compression256(a, b, c, d, e, f, g, h, W)
+        variable_hash = _compression256(a, b, c, d, e, f, g, h, W)
 
         # Adding compressed chunk to initialized current hash value
         for i in range(8):
@@ -91,7 +91,7 @@ def processing(padded_message: str) -> str:
     return ''.join(f'{h:08x}' for h in hash_vals)
 
 
-def compression256(a: int, b: int, c: int, d: int, e: int, f: int, g: int, h: int, W: List[int]) -> List[int]:
+def _compression256(a: int, b: int, c: int, d: int, e: int, f: int, g: int, h: int, W: List[int]) -> List[int]:
     """
     Main Compression Function for SHA-256
 
@@ -127,21 +127,6 @@ def compression256(a: int, b: int, c: int, d: int, e: int, f: int, g: int, h: in
     return [a, b, c, d, e, f, g, h]
 
 
-def rotate_right(n: int, b: int) -> int:
-    """
-    Right rotate a 32-bit integer n by b bits
-
-    Args:
-        n (int): 32-bit integer to be rotated
-        b (int): number of bits to rotate
-
-    Returns:
-        int: rotated 32-bit integer
-    """
-
-    return ((n >> b) | (n << (32 - b))) & 0xffffffff
-
-
 def b_sig0(x: int) -> int:
     """
     SHA-256 bit operations
@@ -154,7 +139,7 @@ def b_sig0(x: int) -> int:
         int: SHA-256 bit operation
     """
 
-    return rotate_right(x, 2) ^ rotate_right(x, 13) ^ rotate_right(x, 22)
+    return rotate_right(x, 2, 32) ^ rotate_right(x, 13, 32) ^ rotate_right(x, 22, 32)
 
 
 def b_sig1(x: int) -> int:
@@ -169,7 +154,7 @@ def b_sig1(x: int) -> int:
         int: SHA-256 bit operation
     """
 
-    return rotate_right(x, 6) ^ rotate_right(x, 11) ^ rotate_right(x, 25)
+    return rotate_right(x, 6, 32) ^ rotate_right(x, 11, 32) ^ rotate_right(x, 25, 32)
 
 
 def s_sig0(x: int) -> int:
@@ -184,7 +169,7 @@ def s_sig0(x: int) -> int:
         int: SHA-256 bit operation
     """
 
-    return rotate_right(x, 7) ^ rotate_right(x, 18) ^ (x >> 3)
+    return rotate_right(x, 7, 32) ^ rotate_right(x, 18, 32) ^ (x >> 3)
 
 
 def s_sig1(x: int) -> int:
@@ -199,44 +184,17 @@ def s_sig1(x: int) -> int:
         int: SHA-256 bit operation
     """
 
-    return rotate_right(x, 17) ^ rotate_right(x, 19) ^ (x >> 10)
-
-
-def is_bit_string(input_string: str) -> bool:
-    """
-    Check if input string is a binary string
-
-    Args:
-        input_string (str): input string
-
-    Returns:
-        bool: True if input string is a binary string, False otherwise
-    """
-
-    for char in input_string:
-        if char not in ['0', '1']:
-            return False
-
-    return True
-
-
-def text_to_binary(input_string: str) -> str:
-    """
-    Convert input string to binary string
-
-    Args:
-        input_string (str): input string
-
-    Returns:
-        str: binary string consisting of 0s and 1s
-    """
-
-    return ''.join(format(ord(char), '08b') for char in input_string)
+    return rotate_right(x, 17, 32) ^ rotate_right(x, 19, 32) ^ (x >> 10)
 
 
 # Driver code
 def sha256(password: str) -> str:
     """
+    Generate SHA-256 hash of the input password
+
+    Args:
+        password (str): password to be hashed
+
     Returns:
         str: hash value of the password in hex format
     """
@@ -245,4 +203,4 @@ def sha256(password: str) -> str:
     if not is_bit_string(password):
         password = text_to_binary(password)
 
-    return processing(padding(password))
+    return _processing_sha256(_padding(password))

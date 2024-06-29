@@ -1,10 +1,23 @@
+"""
+This module contains the implementation of Password-Based Key Derivation Function 2 (PBKDF2)
+
+pbkdf2(password: str, version: int, salt: str, c: int, hLen: int, dkLen: int) -> List[str]: returns hash value and salt
+
+Functions:
+    _prf(password: str, salt: str, c: int, dkLen: int, hLen: int, version: int) -> str
+    pbkdf2(password: str, version: int, salt: str, c: int, hLen: int, dkLen: int) -> List[str]
+
+"""
+
 # import necessary libraries
 from secrets import randbits
 from typing import List
 from .hmac_sha2 import hmac_sha2
 
+# export only the required functions
+__all__ = ['pbkdf2']
 
-def prf(password: str, salt: str, c: int, dkLen: int, hLen: int, version: int) -> str:
+def _prf(password: str, salt: str, c: int, dkLen: int, hLen: int, version: int) -> str:
     """
     Pseudo-Random Function
     HMAC-SHA256 and HMAC-SHA512
@@ -65,6 +78,16 @@ def prf(password: str, salt: str, c: int, dkLen: int, hLen: int, version: int) -
 # Driver code
 def pbkdf2(password: str, version: int, salt: str, c: int, hLen: int, dkLen: int) -> List[str]:
     """
+    Generate a derived key using Password-Based Key Derivation Function 2 (PBKDF2)
+
+    Args:
+        password (str): password to be hashed
+        version (int): version of the hash function (256 or 512)
+        salt (str): salt to be added along with the hash
+        c (int): iteration count
+        hLen (int): length of hash value
+        dkLen (int): desired length of derived key
+
     Returns:
         list(str): list containing hash value and salt
     """
@@ -77,4 +100,4 @@ def pbkdf2(password: str, version: int, salt: str, c: int, hLen: int, dkLen: int
         # Convert hex salt to binary string
         salt = '{0:0128b}'.format(int(salt, 16))
 
-    return [prf(password, salt, c, dkLen, hLen, version), salt]
+    return [_prf(password, salt, c, dkLen, hLen, version), salt]

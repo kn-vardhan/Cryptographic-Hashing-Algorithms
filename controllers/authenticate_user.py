@@ -1,4 +1,13 @@
+"""
+This module is responsible for authenticating the user, performing operations on the user's account.
+
+Classes:
+    AuthenticateUser
+
+"""
+
 # import necessary libraries
+import sys
 from typing import List
 from hashing.sha256 import sha256
 from hashing.sha512 import sha512
@@ -34,17 +43,19 @@ class AuthenticateUser:
         __execute_hashing(password): execute hashing algorithm on the password
     """
 
-    def __init__(self, sql_client, choice: str):
+    def __init__(self, user_interaction, sql_client, choice: str):
         """
         Constructor for AuthenticateUser class
         Initializing an AuthenticateUser object with SQL object client
         And initializing hashing algorithm choice
         """
 
+        self.interaction = user_interaction
         self.sql = sql_client
         self.choice = choice
-        print(f'Welcome to {self.choice} hashing algorithm!\n')
-        print("An interactive user login portal will be displayed below.\n")
+
+        self.interaction.display_message(f'\nWelcome to {self.choice} hashing algorithm!\n')
+        self.interaction.display_message("An interactive user login portal will be displayed below.\n")
 
     def authenticate_user(self, username=None) -> None:
         """
@@ -59,52 +70,40 @@ class AuthenticateUser:
 
         # If username is None, then the user is not logged in
         if username is None:
-            print("1. Register")
-            print("2. Login")
-            print("3. Exit\n")
+            choices = {'1': 'Register',
+                       '2': 'Login',
+                       '3': 'Exit'}
 
-            # User choice of operation
-            # try:
-            choice = int(input("Enter your choice: "))
-            if choice == 1:
+            choice = self.interaction.get_choice("Choose an option:", choices)
+
+            if choice == '1':
                 self.register_user()
-            elif choice == 2:
+            elif choice == '2':
                 self.login_user()
-            elif choice == 3:
-                print("Exiting...\n")
-                exit()
+            elif choice == '3':
+                self.interaction.display_message("Exiting...\n")
+                self.exit_program()
             else:
-                print("Invalid choice!\n")
+                self.interaction.display_message("Invalid option!\n")
                 self.authenticate_user()
-
-            # Handling invalid choice
-            # except ValueError:
-            #     print("Invalid choice!\n")
-            #     self.authenticate_user()
 
         # If username is not None, then the user is logged in
         else:
-            print("1. Change Password")
-            print("2. Delete Account")
-            print("3. Sign Out\n")
+            choices = {'1': 'Change Password',
+                       '2': 'Delete Account',
+                       '3': 'Sign Out'}
 
-            # User choice of operation
-            try:
-                choice = int(input("Enter your choice: "))
-                if choice == 1:
-                    self._change_password(username)
-                elif choice == 2:
-                    self._delete_account(username)
-                elif choice == 3:
-                    print("Signed out successfully!\n")
-                    self.authenticate_user()
-                else:
-                    print("Invalid choice!\n")
-                    self.authenticate_user(username=username)
+            choice = self.interaction.get_choice("Choose an option:", choices)
 
-            # Handling invalid choice
-            except ValueError:
-                print("Invalid choice!\n")
+            if choice == '1':
+                self._change_password(username)
+            elif choice == '2':
+                self._delete_account(username)
+            elif choice == '3':
+                self.interaction.display_message("Signed out successfully!\n")
+                self.authenticate_user()
+            else:
+                self.interaction.display_message("Invalid option!\n")
                 self.authenticate_user(username=username)
 
     def register_user(self) -> None:
@@ -115,27 +114,27 @@ class AuthenticateUser:
             None
         """
 
-        username = input("Enter username: ")
+        username = self.interaction.get_input("Enter username: ")
 
         # Checking if username already exists in the database
         while self.sql.check_username(self.choice, username):
-            print("Username already exists!\n")
-            username = input("Enter username: ")
+            self.interaction.display_message("Username already exists!\n")
+            username = self.interaction.get_input("Enter username: ")
 
-        password = input("Create password: ")
-        confirm_password = input("Confirm password: ")
+        password = self.interaction.get_input("Create password: ")
+        confirm_password = self.interaction.get_input("Confirm password: ")
 
         # Checking if password and confirm password match
         while password != confirm_password:
-            print("Passwords do not match!\n")
-            password = input("Create password: ")
-            confirm_password = input("Confirm password: ")
+            self.interaction.display_message("Passwords do not match!\n")
+            password = self.interaction.get_input("Create password: ")
+            confirm_password = self.interaction.get_input("Confirm password: ")
 
         # Performing hashing on the password and storing in the database
         hash_pwd, _salt = self.__execute_hashing(password)
         self.sql.insert(self.choice, username, hash_pwd, salt=_salt)
 
-        print("Registration successful!\n")
+        self.interaction.display_message("Registration successful!\n")
         self.authenticate_user()
 
     def login_user(self) -> None:
@@ -146,31 +145,31 @@ class AuthenticateUser:
             None
         """
 
-        username = input("Enter username: ")
+        username = self.interaction.get_input("Enter username: ")
 
         # Checking if username exists in the database
         while not self.sql.check_username(self.choice, username):
-            print("Username does not exist!\n")
-            username = input("Enter username: ")
+            self.interaction.display_message("Username does not exist!\n")
+            self.login_user()
 
-        password = input("Enter password: ")
+        password = self.interaction.get_input("Enter password: ")
         _salt = self.sql.get_salt(self.choice, username)
         hash_pwd, _ = self.__execute_hashing(password, salt=_salt)
 
         # Checking if hashed password matches with the hash value in database
         count = 1
         while self.sql.get_hash(self.choice, username) != hash_pwd and count < 3:
-            print(f'Incorrect password! {3 - count} attempts left.\n')
-            password = input("Enter password: ")
+            self.interaction.display_message(f'Incorrect password! {3 - count} attempts left.\n')
+            password = self.interaction.get_input("Enter password: ")
             hash_pwd, _ = self.__execute_hashing(password, salt=_salt)
             count += 1
 
         # Many incorrect attempts by the user, exiting the registration portal
         if count == 3:
-            print("Too many incorrect attempts! Exiting...\n")
+            self.interaction.display_message("Too many incorrect attempts! Exiting...\n")
             self.authenticate_user()
 
-        print("Login successful!\n")
+        self.interaction.display_message("Login successful!\n")
         self.authenticate_user(username=username)
 
     def _change_password(self, username: str) -> None:
@@ -186,20 +185,20 @@ class AuthenticateUser:
         """
 
         # Prompting user for new password
-        password = input("Enter new password: ")
-        confirm_password = input("Confirm new password: ")
+        password = self.interaction.get_input("Enter new password: ")
+        confirm_password = self.interaction.get_input("Confirm new password: ")
 
         # Checking if password and confirm password match
         while password != confirm_password:
-            print("Passwords do not match!\n")
-            password = input("Enter new password: ")
-            confirm_password = input("Confirm new password: ")
+            self.interaction.display_message("Passwords do not match!\n")
+            password = self.interaction.get_input("Enter new password: ")
+            confirm_password = self.interaction.get_input("Confirm new password: ")
 
         # Performing hashing on the password and updating in the database
         hash_pwd, _salt = self.__execute_hashing(password)
         self.sql.update(self.choice, username, hash_pwd, _salt)
 
-        print("Password updated successfully!\n")
+        self.interaction.display_message("Password changed successfully!\n")
         self.authenticate_user(username=username)
 
     def _delete_account(self, username: str) -> None:
@@ -214,28 +213,24 @@ class AuthenticateUser:
             None
         """
 
-        print("Are you sure you want to delete your account?")
-        print("1. Yes")
-        print("2. No\n")
+        # Prompting user for choice of operation
+        self.interaction.display_message("Do you want to delete your account?")
+        choices = {'1': 'Yes',
+                   '2': 'No'}
 
         # User choice of operation
-        try:
-            choice = input("Enter your choice: ")
-            if choice.upper() == '1':
-                self.sql.delete(self.choice, username)
-                print("Account deleted successfully!\n")
-                self.authenticate_user()
-            elif choice.upper() == '0':
-                print("Account not deleted!\n")
-                self.authenticate_user(username=username)
-            else:
-                print("Invalid choice!\n")
-                self.authenticate_user(username=username)
-
-        # Handling invalid choice
-        except ValueError:
-            print("Invalid choice!\n")
+        choice = self.interaction.get_choice("Choose an option:", choices)
+        if choice.upper() == '1':
+            self.sql.delete(self.choice, username)
+            self.interaction.display_message("Account deleted successfully!\n")
+            self.authenticate_user()
+        elif choice.upper() == '0':
+            self.interaction.display_message("Account not deleted!\n")
             self.authenticate_user(username=username)
+        else:
+            self.interaction.display_message("Invalid option!\n")
+            self.authenticate_user(username=username)
+
 
     def __execute_hashing(self, password: str, salt=None) -> List[str]:
         """
@@ -248,6 +243,9 @@ class AuthenticateUser:
 
         Returns:
             list(str): list containing hash value and salt
+
+        Raises:
+            ValueError: Invalid choice
         """
 
         # Executing specific hashing algorithm based on user's choice
@@ -267,3 +265,13 @@ class AuthenticateUser:
             return bcrypt(password, salt, BCRYPT_COST)
         else:
             raise ValueError("Invalid choice!")
+    
+    @staticmethod
+    def exit_program():
+        """
+        Exits the program
+        
+        Returns:
+            None
+        """
+        sys.exit()
