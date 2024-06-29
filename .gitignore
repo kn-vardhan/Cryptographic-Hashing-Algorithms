@@ -7,3 +7,5 @@ __pycache__
 # Ignore .gitattributes file
 .gitattributes
 
+# Ignore database file
+userDatabase.db
